@@ -40,5 +40,5 @@ app.use(vuetify);
 app.component('EasyDataTable', Vue3EasyDataTable);
 app.config.globalProperties.$axios = axios
 app.config.productionTip = false;
-app.config.globalProperties.$rutaBase = '/test/';
+app.config.globalProperties.$rutaBase = '/codigosdebarras/';
 app.mount('#app');

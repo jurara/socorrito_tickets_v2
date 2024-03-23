@@ -65,7 +65,7 @@
         <div class="operation-wrapper manita">
 
           <img src="../assets/pdf.png" class="operation-icon ml-1"
-            @click="generarArchivoConAlerta(item.nombre, item.gramaje, item.codigo)" width="30" height="30" />
+            @click="generarTicket(item.nombre, item.gramaje, item.codigo)" width="30" height="30" />
         </div>
       </template>
 
@@ -129,10 +129,18 @@ export default {
         });
     },
     modalPDF() {
-      this.generarArchivoConAlerta(this.producto, this.gramaje, this.codigo);
+      this.generarTicket(this.producto, this.gramaje, this.codigo);
     },
-    generarTicket(p_nombre, p_gramaje, p_codigo) {
-      this.generando = true;
+    async generarTicket(p_nombre, p_gramaje, p_codigo) {
+      const loadingAlert = Swal.fire({
+        title: 'Generando archivo',
+        text: 'Por favor, espera un momento...',
+        allowOutsideClick: false, // Evita que se cierre haciendo clic fuera del modal
+        showConfirmButton: false, // Oculta el botón de confirmación
+        willOpen: () => {
+          Swal.showLoading();
+        }
+      });
       this.$axios.post('http://192.168.1.78:3000/generate-pdf', {
         nombre: p_nombre ? p_nombre : '',
         gramaje: p_gramaje ? p_gramaje : '',
@@ -150,49 +158,25 @@ export default {
 
           // Abre el PDF en una nueva pestaña
           window.open(url, '_blank');
-          return Promise.resolve(response);
-        }, error => {
-          return Promise.reject(error);
+          loadingAlert.close();
+          Swal.fire({
+            icon: 'success',
+            title: 'Archivo generado',
+            text: 'El archivo se generó correctamente',
+            showConfirmButton: false,
+            timer: 1500
+          });
         })
         .catch(error => {
           console.log(error)
-        }).finally(() => {
-          this.generando = false;
+          loadingAlert.close();
+          Swal.fire('Error', 'Hubo un problema al generar el archivo', 'error');
         });
 
 
 
     },
-    async generarArchivoConAlerta(p_nombre, p_gramaje, p_codigo) {
-      // Mostrar SweetAlert2 con un mensaje de carga
-      const loadingAlert = Swal.fire({
-        title: 'Generando archivo',
-        text: 'Por favor, espera un momento...',
-        allowOutsideClick: false, // Evita que se cierre haciendo clic fuera del modal
-        showConfirmButton: false, // Oculta el botón de confirmación
-        willOpen: () => {
-          Swal.showLoading();
-        }
-      });
 
-      try {
-        // Generar el archivo
-        await this.generarTicket(p_nombre, p_gramaje, p_codigo);
-        // Cuando la generación del archivo es exitosa, cerrar la alerta
-        loadingAlert.close();
-        // Mostrar una alerta de éxito
-        Swal.fire({
-          icon: 'success',
-          title: 'Archivo generado',
-          text: 'El archivo se generó correctamente',
-          showConfirmButton: false,
-          timer: 1500
-        });
-      } catch (error) {
-        // Si hay un error durante la generación del archivo, mostrar una alerta de error
-        Swal.fire('Error', 'Hubo un problema al generar el archivo', 'error');
-      }
-    }
   },
   created() {
     this.getBarCodes()
